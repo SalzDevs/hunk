@@ -6,6 +6,8 @@ All notable user-visible changes to Hunk are documented in this file.
 
 ### Added
 
+- Added session-persistent user-authored inline notes with `i` to draft/save notes and `hunk session note ...` commands for agent readback.
+
 ### Changed
 
 ### Fixed

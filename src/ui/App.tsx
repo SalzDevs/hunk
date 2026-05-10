@@ -28,7 +28,7 @@ import { resolveResponsiveLayout } from "./lib/responsive";
 import { resizeSidebarWidth } from "./lib/sidebar";
 import { resolveTheme, THEMES } from "./themes";
 
-type FocusArea = "files" | "filter";
+type FocusArea = "files" | "filter" | "note";
 
 const FAST_CODE_HORIZONTAL_SCROLL_COLUMNS = 8;
 
@@ -150,6 +150,9 @@ export function App({
     openAgentNotes,
     reloadSession: onReloadSession,
     removeLiveComment: review.removeLiveComment,
+    removeUserNote: review.removeUserNote,
+    reviewNoteCount: review.reviewNoteCount,
+    reviewNoteSummaries: review.reviewNoteSummaries,
     selectedFile,
     selectedHunk: review.selectedHunk,
     selectedHunkIndex,
@@ -460,6 +463,29 @@ export function App({
     setFocusArea((current) => (current === "files" ? "filter" : "files"));
   }, []);
 
+  /** Start a user-authored inline note and move keyboard focus into it. */
+  const startUserNote = useCallback(
+    (fileId?: string, hunkIndex?: number) => {
+      const draft = review.startUserNote(fileId, hunkIndex);
+      if (draft) {
+        setFocusArea("note");
+      }
+    },
+    [review.startUserNote],
+  );
+
+  /** Save the active draft note and return focus to review navigation. */
+  const saveDraftNote = useCallback(() => {
+    review.saveDraftNote();
+    setFocusArea("files");
+  }, [review.saveDraftNote]);
+
+  /** Cancel the active draft note and return focus to review navigation. */
+  const cancelDraftNote = useCallback(() => {
+    review.cancelDraftNote();
+    setFocusArea("files");
+  }, [review.cancelDraftNote]);
+
   /** Cycle through the available built-in themes. */
   const cycleTheme = useCallback(() => {
     const currentIndex = THEMES.findIndex((theme) => theme.id === activeTheme.id);
@@ -545,6 +571,7 @@ export function App({
     closeHelp,
     closeMenu,
     cycleTheme,
+    cancelDraftNote,
     focusArea,
     focusFilter,
     moveToAnnotatedHunk,
@@ -554,9 +581,11 @@ export function App({
     pagerMode,
     requestQuit,
     scrollCodeHorizontally,
+    saveDraftNote,
     scrollDiff,
     selectLayoutMode,
     showHelp,
+    startUserNote: () => startUserNote(),
     switchMenu,
     toggleAgentNotes,
     toggleFocusArea,
@@ -709,6 +738,7 @@ export function App({
           selectedFileId={selectedFile?.id}
           selectedHunkIndex={selectedHunkIndex}
           scrollToNote={review.scrollToNote}
+          draftNote={review.draftNote}
           separatorWidth={diffSeparatorWidth}
           showAgentNotes={showAgentNotes}
           showLineNumbers={showLineNumbers}
@@ -722,6 +752,11 @@ export function App({
           theme={activeTheme}
           width={diffPaneWidth}
           onOpenAgentNotesAtHunk={openAgentNotesAtHunk}
+          onRemoveUserNote={review.removeUserNote}
+          onSaveDraftNote={saveDraftNote}
+          onStartUserNoteAtHunk={startUserNote}
+          onUpdateDraftNote={review.updateDraftNote}
+          onCancelDraftNote={cancelDraftNote}
           onScrollCodeHorizontally={(delta) => {
             scrollCodeHorizontally(delta * FAST_CODE_HORIZONTAL_SCROLL_COLUMNS);
           }}
